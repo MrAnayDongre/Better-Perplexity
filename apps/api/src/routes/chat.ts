@@ -38,6 +38,39 @@ function sseSend(res: Response, event: string, data: unknown) {
   res.write(`data: ${JSON.stringify(data)}\n\n`);
 }
 
+async function emitRunArtifacts(res: Response, runId: string) {
+  const run = await prisma.run.findUnique({
+    where: { id: runId },
+    include: { sources: true }
+  });
+
+  if (!run) return;
+
+  sseSend(res, "sources", {
+    sources: run.sources.map((src) => ({
+      url: src.url,
+      title: src.title,
+      domain: src.domain,
+      excerpt: src.excerpt
+    }))
+  });
+
+  try {
+    const trace = JSON.parse(run.traceJson || "[]");
+    sseSend(res, "trace", { trace });
+  } catch {
+    // ignore
+  }
+
+  try {
+    const claims = JSON.parse(run.claimsJson || "[]");
+    sseSend(res, "claims", { claims });
+  } catch {
+    // ignore
+  }
+}
+
+
 function sseStatus(res: Response, message: string, step?: number, total?: number) {
   sseSend(res, "status", { message, step, total });
 }
@@ -138,28 +171,30 @@ export async function chatHandler(req: Request, res: Response) {
     const ck = artifactKey(body.mode, body.message);
     const cached = await cacheGet(ck);
     if (cached) {
-      const artifact = JSON.parse(cached) as CachedArtifact;
+    // Cache payload v2: JSON { runId, answer }. Legacy payload: plain string.
+    let cachedRunId: string | null = null;
+    let cachedAnswer = "";
 
-      sseStatus(res, "Cached answer", 4, 4);
-
-      await persistRunFromArtifact({
-        conversationId,
-        runId,
-        mode: body.mode,
-        userMessage: body.message,
-        artifact
-      });
-
-      if (body.mode === "reliability" && (artifact.claims?.length ?? 0) > 0) {
-        sseSend(res, "claims", { claims: artifact.claims });
-      }
-
-      streamTextQuick(res, artifact.finalAnswer);
-      sseSend(res, "done", { runId });
-      clearInterval(ka);
-      res.end();
-      return;
+    try {
+      const parsed = JSON.parse(cached) as { runId?: string; answer?: string };
+      cachedRunId = parsed.runId ?? null;
+      cachedAnswer = parsed.answer ?? "";
+    } catch {
+      cachedAnswer = cached;
     }
+
+    sseStatus(res, "Cached answer", 4, 4);
+
+    if (cachedRunId) {
+      await emitRunArtifacts(res, cachedRunId);
+      sseSend(res, "done", { runId: cachedRunId });
+    } else {
+      sseSend(res, "done", { runId });
+    }
+
+    streamTextQuick(res, cachedAnswer);
+    return;
+  }
 
     await prisma.conversation.upsert({ where: { id: conversationId }, update: {}, create: { id: conversationId } });
     await prisma.message.create({ data: { id: createId(), conversationId, role: "user", content: body.message } });
