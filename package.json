@@ -1,0 +1,10 @@
+{
+  "name": "better-perplexity",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.30.1",
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c blue,green \"pnpm -C apps/api dev\" \"pnpm -C apps/web dev\"",
+    "build": "pnpm -C apps/api build && pnpm -C apps/web build"
+  }
+}

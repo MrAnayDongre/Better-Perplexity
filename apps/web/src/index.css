@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 800px at 20% 10%, rgba(99,102,241,0.20), transparent 55%),
+              radial-gradient(900px 700px at 80% 20%, rgba(16,185,129,0.14), transparent 55%),
+              radial-gradient(1200px 800px at 50% 100%, rgba(236,72,153,0.10), transparent 60%),
+              #0b0f19;
+  color: #e5e7eb;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* a subtle “glass” utility for cards */
+.glass {
+  background: rgba(17, 24, 39, 0.55);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+}
+
+/* Prevent horizontal scroll from long URLs / tokens */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Make long words/URLs wrap */
+.prose, .prose * {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* In case a link is a single long token */
+a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Perplexity-style: app owns the viewport; columns scroll, not the whole page */
+#root {
+  height: 100vh;
+  overflow: hidden;
+}

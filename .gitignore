@@ -1,0 +1,24 @@
+# deps
+node_modules
+.pnpm-store
+
+# builds
+dist
+apps/*/dist
+
+# env
+.env
+apps/*/.env
+
+# prisma
+apps/api/dev.db
+apps/api/dev.db-journal
+apps/api/prisma/migrations
+
+# logs
+*.log
+
+# OS/editor
+.DS_Store
+.idea
+.vscode
