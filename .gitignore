@@ -13,7 +13,6 @@ apps/*/.env
 # prisma
 apps/api/dev.db
 apps/api/dev.db-journal
-apps/api/prisma/migrations
 
 # logs
 *.log
